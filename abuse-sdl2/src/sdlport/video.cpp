@@ -41,10 +41,7 @@
 #include "image.h"
 #include "setup.h"
 
-SDL_Window *window = NULL;
-SDL_Renderer *renderer = NULL;
-SDL_Surface *surface = NULL;
-SDL_Texture *texture = NULL;
+SDL_Surface *window = NULL, *surface = NULL;
 image *screen = NULL;
 int win_xscale, win_yscale, mouse_xscale, mouse_yscale;
 int xres, yres;
@@ -54,6 +51,7 @@ extern flags_struct flags;
 #ifdef HAVE_OPENGL
 GLfloat texcoord[4];
 GLuint texid;
+SDL_Surface *texture = NULL;
 #endif
 
 static void update_window_part(SDL_Rect *rect);
@@ -75,16 +73,22 @@ static int power_of_two(int input)
 //
 void set_mode(int mode, int argc, char **argv)
 {
-    int vidFlags; //= SDL_HWPALETTE;
+    const SDL_VideoInfo *vidInfo;
+    int vidFlags = SDL_HWPALETTE;
 
-    /*
+    // Check for video capabilities
+    vidInfo = SDL_GetVideoInfo();
+    if(vidInfo->hw_available)
+        vidFlags |= SDL_HWSURFACE;
+    else
+        vidFlags |= SDL_SWSURFACE;
+
     if(flags.fullscreen)
         vidFlags |= SDL_FULLSCREEN;
 
     if(flags.doublebuf)
         vidFlags |= SDL_DOUBLEBUF;
-    */
-    
+
     // Calculate the window scale
     win_xscale = mouse_xscale = (flags.xres << 16) / xres;
     win_yscale = mouse_yscale = (flags.yres << 16) / yres;
@@ -94,9 +98,9 @@ void set_mode(int mode, int argc, char **argv)
 #ifdef HAVE_OPENGL
         printf("Video : OpenGL enabled\n");
         // allow doublebuffering in with gl too
-        //SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, flags.doublebuf);
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, flags.doublebuf);
         // set video gl capability
-        //vidFlags |= SDL_OPENGL;
+        vidFlags |= SDL_OPENGL;
         // force no scaling, let the hw do it
         win_xscale = win_yscale = 1 << 16;
 #else
@@ -107,25 +111,13 @@ void set_mode(int mode, int argc, char **argv)
     }
 
     // Set the icon for this window.  Looks nice on taskbars etc.
-    //SDL_WM_SetIcon(SDL_LoadBMP("abuse.bmp"), NULL);
+    SDL_WM_SetIcon(SDL_LoadBMP("abuse.bmp"), NULL);
 
-    window = SDL_CreateWindow("Abuse",
-			      SDL_WINDOWPOS_UNDEFINED,
-			      SDL_WINDOWPOS_UNDEFINED,
-			      flags.xres, flags.yres,
-			      0);
-
+    // Create the window with a preference for 8-bit (palette animations!), but accept any depth */
+    window = SDL_SetVideoMode(flags.xres, flags.yres, 8, vidFlags | SDL_ANYFORMAT);
     if(window == NULL)
     {
-        printf("Video : Unable to create window: %s\n", SDL_GetError());
-        exit(1);
-    }
-    
-    renderer = SDL_CreateRenderer(window, -1, 0);
-    
-    if(renderer == NULL)
-    {
-        printf("Video : Unable to create renderer: %s\n", SDL_GetError());
+        printf("Video : Unable to set video mode : %s\n", SDL_GetError());
         exit(1);
     }
 
@@ -151,15 +143,48 @@ void set_mode(int mode, int argc, char **argv)
         h = power_of_two(yres);
 
         // create texture surface
-	texture = SDL_CreateTexture(renderer,
-				    SDL_PIXELFORMAT_ARGB8888,
-				    SDL_TEXTUREACCESS_STREAMING,
-				    w, h);
+        texture = SDL_CreateRGBSurface(SDL_SWSURFACE, w , h , 32,
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+                0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+#else
+                0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+#endif
+
+        // setup 2D gl environment
+        glPushAttrib(GL_ENABLE_BIT);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+        glEnable(GL_TEXTURE_2D);
+
+        glViewport(0, 0, window->w, window->h);
+
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+
+        glOrtho(0.0, (GLdouble)window->w, (GLdouble)window->h, 0.0, 0.0, 1.0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        // texture coordinates
+        texcoord[0] = 0.0f;
+        texcoord[1] = 0.0f;
+        texcoord[2] = (GLfloat)xres / texture->w;
+        texcoord[3] = (GLfloat)yres / texture->h;
+
+        // create an RGBA texture for the texture surface
+        glGenTextures(1, &texid);
+        glBindTexture(GL_TEXTURE_2D, texid);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, flags.antialias);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, flags.antialias);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->w, texture->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture->pixels);
 #endif
     }
 
     // Create our 8-bit surface
-    surface = SDL_CreateRGBSurface(0, window->w, window->h, 8, 0xff, 0xff, 0xff, 0xff);
+    surface = SDL_CreateRGBSurface(SDL_SWSURFACE, window->w, window->h, 8, 0xff, 0xff, 0xff, 0xff);
     if(surface == NULL)
     {
         // Our surface is no good, we have to bail.
@@ -169,10 +194,13 @@ void set_mode(int mode, int argc, char **argv)
 
     printf("Video : %dx%d %dbpp\n", window->w, window->h, window->format->BitsPerPixel);
 
+    // Set the window caption
+    SDL_WM_SetCaption("Abuse", "Abuse");
+
     // Grab and hide the mouse cursor
     SDL_ShowCursor(0);
     if(flags.grabmouse)
-      SDL_SetWindowGrab(SDL_TRUE);
+        SDL_WM_GrabInput(SDL_GRAB_ON);
 
     update_dirty(screen);
 }
@@ -330,6 +358,8 @@ void palette::load()
         colors[ii].b = blue(ii);
     }
     SDL_SetColors(surface, colors, 0, ncolors);
+    if(window->format->BitsPerPixel == 8)
+        SDL_SetColors(window, colors, 0, ncolors);
 
     // Now redraw the surface
     update_window_part(NULL);
@@ -353,8 +383,7 @@ void update_window_done()
     if(flags.gl)
     {
         // convert color-indexed surface to RGB texture
-        //SDL_BlitSurface(surface, NULL, texture, NULL);
-	SDL_ConvertPixels();
+        SDL_BlitSurface(surface, NULL, texture, NULL);
 
         // Texturemap complete texture to surface so we have free scaling
         // and antialiasing
