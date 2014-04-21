@@ -159,7 +159,7 @@ void set_mode(int mode, int argc, char **argv)
     }
 
     // Create our 8-bit surface
-    surface = SDL_CreateRGBSurface(0, window->w, window->h, 8, 0xff, 0xff, 0xff, 0xff);
+    surface = SDL_CreateRGBSurface(0, xres, yres, 8, 0xff, 0xff, 0xff, 0xff);
     if(surface == NULL)
     {
         // Our surface is no good, we have to bail.
@@ -353,20 +353,8 @@ void update_window_done()
     if(flags.gl)
     {
         // convert color-indexed surface to RGB texture
-        //SDL_BlitSurface(surface, NULL, texture, NULL);
-	SDL_ConvertPixels();
-
-        // Texturemap complete texture to surface so we have free scaling
-        // and antialiasing
-        glTexSubImage2D(GL_TEXTURE_2D, 0,
-                        0, 0, texture->w, texture->h,
-                        GL_RGBA, GL_UNSIGNED_BYTE, texture->pixels);
-        glBegin(GL_TRIANGLE_STRIP);
-        glTexCoord2f(texcoord[0], texcoord[1]); glVertex3i(0, 0, 0);
-        glTexCoord2f(texcoord[2], texcoord[1]); glVertex3i(window->w, 0, 0);
-        glTexCoord2f(texcoord[0], texcoord[3]); glVertex3i(0, window->h, 0);
-        glTexCoord2f(texcoord[2], texcoord[3]); glVertex3i(window->w, window->h, 0);
-        glEnd();
+        SDL_ConvertPixels(xres, yres, SDL_PIXELFORMAT_INDEX8, surface->pixels, surface->pitch, SDL_PIXELFORMAT_ARGB8888, texture->pixels, texture->pitch);
+	
 
         if(flags.doublebuf)
             SDL_GL_SwapBuffers();
