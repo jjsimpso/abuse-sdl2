@@ -24,16 +24,6 @@
 
 #include <SDL.h>
 
-#ifdef HAVE_OPENGL
-#   ifdef __APPLE__
-#       include <OpenGL/gl.h>
-#       include <OpenGL/glu.h>
-#   else
-#       include <GL/gl.h>
-#       include <GL/glu.h>
-#   endif    /* __APPLE__ */
-#endif    /* HAVE_OPENGL */
-
 #include "common.h"
 
 #include "filter.h"
@@ -51,10 +41,6 @@ int xres, yres;
 
 extern palette *lastl;
 extern flags_struct flags;
-#ifdef HAVE_OPENGL
-GLfloat texcoord[4];
-GLuint texid;
-#endif
 
 static void update_window_part(SDL_Rect *rect);
 
@@ -89,22 +75,8 @@ void set_mode(int mode, int argc, char **argv)
     win_xscale = mouse_xscale = (flags.xres << 16) / xres;
     win_yscale = mouse_yscale = (flags.yres << 16) / yres;
 
-    // Try using opengl hw accell
-    if(flags.gl) {
-#ifdef HAVE_OPENGL
-        printf("Video : OpenGL enabled\n");
-        // allow doublebuffering in with gl too
-        //SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, flags.doublebuf);
-        // set video gl capability
-        //vidFlags |= SDL_OPENGL;
-        // force no scaling, let the hw do it
-        win_xscale = win_yscale = 1 << 16;
-#else
-        // ignore the option if not available
-        printf("Video : OpenGL disabled (Support missing in executable)\n");
-        flags.gl = 0;
-#endif
-    }
+    // force no scaling, let the hw do it
+    win_xscale = win_yscale = 1 << 16;
 
     // Set the icon for this window.  Looks nice on taskbars etc.
     //SDL_WM_SetIcon(SDL_LoadBMP("abuse.bmp"), NULL);
@@ -139,24 +111,19 @@ void set_mode(int mode, int argc, char **argv)
     }
     screen->clear();
 
-    if (flags.gl)
-    {
-#ifdef HAVE_OPENGL
-        int w, h;
-
-        // texture width/height should be power of 2
-        // FIXME: we can use GL_ARB_texture_non_power_of_two or
-        // GL_ARB_texture_rectangle to avoid the extra memory allocation
-        w = power_of_two(xres);
-        h = power_of_two(yres);
-
-        // create texture surface
-	texture = SDL_CreateTexture(renderer,
-				    SDL_PIXELFORMAT_ARGB8888,
-				    SDL_TEXTUREACCESS_STREAMING,
-				    w, h);
-#endif
-    }
+    int w, h;
+    
+    // texture width/height should be power of 2
+    // FIXME: we can use GL_ARB_texture_non_power_of_two or
+    // GL_ARB_texture_rectangle to avoid the extra memory allocation
+    w = power_of_two(xres);
+    h = power_of_two(yres);
+    
+    // create texture surface
+    texture = SDL_CreateTexture(renderer,
+				SDL_PIXELFORMAT_ARGB8888,
+				SDL_TEXTUREACCESS_STREAMING,
+				w, h);
 
     // Create our 8-bit surface
     surface = SDL_CreateRGBSurface(0, xres, yres, 8, 0xff, 0xff, 0xff, 0xff);
@@ -190,10 +157,9 @@ void close_graphics()
     if(surface)
         SDL_FreeSurface(surface);
 
-#ifdef HAVE_OPENGL
     if (texture)
         SDL_FreeSurface(texture);
-#endif
+
     delete screen;
 }
 
@@ -329,7 +295,8 @@ void palette::load()
         colors[ii].g = green(ii);
         colors[ii].b = blue(ii);
     }
-    SDL_SetColors(surface, colors, 0, ncolors);
+
+    SDL_SetPaletteColors(surface->format->palette, colors, 0, ncolors);
 
     // Now redraw the surface
     update_window_part(NULL);
@@ -348,32 +315,23 @@ void palette::load_nice()
 
 void update_window_done()
 {
-#ifdef HAVE_OPENGL
     // opengl blit complete surface to window
-    if(flags.gl)
-    {
-        // convert color-indexed surface to RGB texture
-        SDL_ConvertPixels(xres, yres, SDL_PIXELFORMAT_INDEX8, surface->pixels, surface->pitch, SDL_PIXELFORMAT_ARGB8888, texture->pixels, texture->pitch);
-	
-
-        if(flags.doublebuf)
-            SDL_GL_SwapBuffers();
-    }
-#else
-    // swap buffers in case of double buffering
-    // do nothing in case of single buffering
-    if(flags.doublebuf)
-        SDL_Flip(window);
-#endif
+    
+    // convert color-indexed surface to RGB texture
+    SDL_ConvertPixels(xres, yres, SDL_PIXELFORMAT_INDEX8, surface->pixels, surface->pitch, SDL_PIXELFORMAT_ARGB8888, texture->pixels, texture->pitch);
+    
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    SDL_RenderPresent(renderer);
 }
 
 static void update_window_part(SDL_Rect *rect)
 {
     // no partial blit's in case of opengl
     // complete blit + scaling just before flip
-    if (flags.gl)
-        return;
+    return;
 
+#if 0
     SDL_BlitSurface(surface, rect, window, rect);
 
     // no window update needed until end of run
@@ -385,4 +343,5 @@ static void update_window_part(SDL_Rect *rect)
         SDL_UpdateRect(window, 0, 0, 0, 0);
     else
         SDL_UpdateRect(window, rect->x, rect->y, rect->w, rect->h);
+#endif
 }
