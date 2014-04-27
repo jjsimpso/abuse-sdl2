@@ -27,7 +27,6 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <SDL.h>
-#ifdef HAVE_OPENGL
 #ifdef __APPLE__
 #include <Carbon/Carbon.h>
 #include <OpenGL/gl.h>
@@ -36,7 +35,6 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #endif    /* __APPLE__ */
-#endif    /* HAVE_OPENGL */
 
 #include "specs.h"
 #include "keys.h"
@@ -68,10 +66,8 @@ void showHelp()
     printf( "  -datadir <arg>    Set the location of the game data to <arg>\n" );
     printf( "  -doublebuf        Enable double buffering\n" );
     printf( "  -fullscreen       Enable fullscreen mode\n" );
-#ifdef HAVE_OPENGL
     printf( "  -gl               Enable OpenGL\n" );
     printf( "  -antialias        Enable anti-aliasing (with -gl only)\n" );
-#endif
     printf( "  -h, --help        Display this text\n" );
     printf( "  -mono             Disable stereo sound\n" );
     printf( "  -nosound          Disable sound\n" );
@@ -182,7 +178,6 @@ void readRCFile()
                 result = strtok( NULL, "\n" );
                 flags.gl = atoi( result );
             }
-#ifdef HAVE_OPENGL
             else if( strcasecmp( result, "antialias" ) == 0 )
             {
                 result = strtok( NULL, "\n" );
@@ -191,7 +186,6 @@ void readRCFile()
                     flags.antialias = GL_LINEAR;
                 }
             }
-#endif
             else if( strcasecmp( result, "nosdlparachute" ) == 0 )
             {
                 result = strtok( NULL, "\n" );
@@ -315,12 +309,10 @@ void parseCommandLine( int argc, char **argv )
             // at least inform the user.
             flags.gl = 1;
         }
-#ifdef HAVE_OPENGL
         else if( !strcasecmp( argv[ii], "-antialias" ) )
         {
             flags.antialias = GL_LINEAR;
         }
-#endif
         else if( !strcasecmp( argv[ii], "-mono" ) )
         {
             flags.mono = 1;
@@ -360,10 +352,8 @@ void setup( int argc, char **argv )
 #else
     flags.gl                = 0;            // Don't use opengl
     flags.doublebuf            = 0;            // No double buffering
-    #endif
-#ifdef HAVE_OPENGL
-    flags.antialias            = GL_NEAREST;    // Don't anti-alias
 #endif
+    flags.antialias            = GL_NEAREST;    // Don't anti-alias
     keys.up                    = key_value( "UP" );
     keys.down                = key_value( "DOWN" );
     keys.left                = key_value( "LEFT" );
