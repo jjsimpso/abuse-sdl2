@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = lisp net imlib sdlport
+SUBDIRS = lisp net imlib @SDLPORT_DIR@
 
 bin_PROGRAMS = abuse abuse-tool
 
@@ -64,7 +64,7 @@ abuse_SOURCES = \
     ui/volumewindow.cpp ui/volumewindow.h \
     $(NULL)
 
-EXTRALIBS = lisp/liblisp.a sdlport/libsdlport.a imlib/libimlib.a net/libnet.a
+EXTRALIBS = lisp/liblisp.a @SDLPORT_DIR@/libsdlport.a imlib/libimlib.a net/libnet.a
 abuse_LDADD = $(EXTRALIBS)
 abuse_DEPENDENCIES = $(EXTRALIBS)
 
