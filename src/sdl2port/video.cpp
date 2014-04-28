@@ -134,7 +134,8 @@ void set_mode(int mode, int argc, char **argv)
         exit(1);
     }
 
-    printf("Video : %dx%d %dbpp\n", window->w, window->h, window->format->BitsPerPixel);
+    
+    //printf("Video : %dx%d %dbpp\n", window->w, window->h, window->format->BitsPerPixel);
 
     // Grab and hide the mouse cursor
     SDL_ShowCursor(0);
