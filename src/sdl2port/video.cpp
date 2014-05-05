@@ -338,8 +338,8 @@ void update_window_done()
     // opengl blit complete surface to window
     
     // convert color-indexed surface to RGBA surface
-    SDL_ConvertPixels(xres, yres, SDL_PIXELFORMAT_INDEX8, surface->pixels, surface->pitch, SDL_PIXELFORMAT_ARGB8888, rgba_surface->pixels, rgba_surface->pitch);
-    
+    SDL_BlitSurface(surface, NULL, rgba_surface, NULL);
+
     SDL_UpdateTexture(texture, NULL, rgba_surface->pixels, rgba_surface->pitch);
     
     SDL_RenderClear(renderer);
