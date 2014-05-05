@@ -39,6 +39,8 @@ extern int get_key_binding( char const *dir, int i );
 extern int mouse_xscale, mouse_yscale;
 short mouse_buttons[5] = { 0, 0, 0, 0, 0 };
 
+extern SDL_Window *window;
+
 // Pre-declarations
 void handle_mouse( event &ev );
 
@@ -53,8 +55,8 @@ event_handler::event_handler( image *screen, palette *pal )
     last_keystat = get_key_flags();
     ewaiting = 0;
 
-    // Ignore activate events
-    SDL_EventState( SDL_ACTIVEEVENT, SDL_IGNORE );
+    // Ignore activate events (still needed in SDL2?)
+    //SDL_EventState( SDL_ACTIVEEVENT, SDL_IGNORE );
 }
 
 //
@@ -80,7 +82,7 @@ void event_handler::flush_screen()
 //
 int event_handler::get_key_flags()
 {
-    SDLMod key_flag;
+    SDL_Keymod key_flag;
 
     key_flag = SDL_GetModState();
 
@@ -235,7 +237,7 @@ void event_handler::get_event( event &ev )
                         case SDLK_RALT:            ev.key = JK_ALT_R; break;
                         case SDLK_LSHIFT:        ev.key = JK_SHIFT_L; break;
                         case SDLK_RSHIFT:        ev.key = JK_SHIFT_R; break;
-                        case SDLK_NUMLOCK:        ev.key = JK_NUM_LOCK; break;
+                        case SDLK_NUMLOCKCLEAR:  ev.key = JK_NUM_LOCK; break;
                         case SDLK_HOME:            ev.key = JK_HOME; break;
                         case SDLK_END:            ev.key = JK_END; break;
                         case SDLK_BACKSPACE:    ev.key = JK_BACKSPACE; break;
@@ -255,20 +257,21 @@ void event_handler::get_event( event &ev )
                         case SDLK_F9:            ev.key = JK_F9; break;
                         case SDLK_F10:            ev.key = JK_F10; break;
                         case SDLK_INSERT:        ev.key = JK_INSERT; break;
-                        case SDLK_KP0:            ev.key = JK_INSERT; break;
+                        case SDLK_KP_0:            ev.key = JK_INSERT; break;
                         case SDLK_PAGEUP:        ev.key = JK_PAGEUP; break;
                         case SDLK_PAGEDOWN:        ev.key = JK_PAGEDOWN; break;
-                        case SDLK_KP8:            ev.key = JK_UP; break;
-                        case SDLK_KP2:            ev.key = JK_DOWN; break;
-                        case SDLK_KP4:            ev.key = JK_LEFT; break;
-                        case SDLK_KP6:            ev.key = JK_RIGHT; break;
+                        case SDLK_KP_8:            ev.key = JK_UP; break;
+                        case SDLK_KP_2:            ev.key = JK_DOWN; break;
+                        case SDLK_KP_4:            ev.key = JK_LEFT; break;
+                        case SDLK_KP_6:            ev.key = JK_RIGHT; break;
                         case SDLK_F11:
                         {
                             // Only handle key down
                             if( ev.type == EV_KEY )
                             {
                                 // Toggle fullscreen
-                                SDL_WM_ToggleFullScreen( SDL_GetVideoSurface() );
+				// need to figure this out for SDL2
+                                //SDL_WM_ToggleFullScreen( SDL_GetVideoSurface() );
                             }
                             ev.key = EV_SPURIOUS;
                             break;
@@ -279,27 +282,28 @@ void event_handler::get_event( event &ev )
                             if( ev.type == EV_KEY )
                             {
                                 // Toggle grab mouse
-                                if( SDL_WM_GrabInput( SDL_GRAB_QUERY ) == SDL_GRAB_ON )
+                                if( SDL_GetWindowGrab(window) == SDL_TRUE )
                                 {
                                     the_game->show_help( "Grab Mouse: OFF\n" );
-                                    SDL_WM_GrabInput( SDL_GRAB_OFF );
+				    SDL_SetWindowGrab(window, SDL_FALSE);
                                 }
                                 else
                                 {
                                     the_game->show_help( "Grab Mouse: ON\n" );
-                                    SDL_WM_GrabInput( SDL_GRAB_ON );
+				    SDL_SetWindowGrab(window, SDL_TRUE);
                                 }
                             }
                             ev.key = EV_SPURIOUS;
                             break;
                         }
-                        case SDLK_PRINT:    // print-screen key
+                        case SDLK_PRINTSCREEN:    // print-screen key
                         {
                             // Only handle key down
                             if( ev.type == EV_KEY )
                             {
                                 // Grab a screenshot
-                                SDL_SaveBMP( SDL_GetVideoSurface(), "screenshot.bmp" );
+				// need to figure this out for SDL2
+                                //SDL_SaveBMP( SDL_GetVideoSurface(), "screenshot.bmp" );
                                 the_game->show_help( "Screenshot saved to: screenshot.bmp.\n" );
                             }
                             ev.key = EV_SPURIOUS;
