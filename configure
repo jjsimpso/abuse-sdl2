@@ -17243,7 +17243,7 @@ done
   if test "${ac_cv_my_have_sdl_mixer}" = "no"; then
     as_fn_error $? "*** SDL_mixer not found!" "$LINENO" 5
   fi
-  LIBS="$LIBS -lSDL_mixer"
+  LIBS="$LIBS -lSDL2_mixer"
 else
   ac_cv_my_have_sdl_mixer="no"
   save_CPPFLAGS="${CPPFLAGS}"
