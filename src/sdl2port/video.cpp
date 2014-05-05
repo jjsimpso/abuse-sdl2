@@ -34,6 +34,7 @@
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 SDL_Surface *surface = NULL;
+SDL_Surface *rgba_surface = NULL;
 SDL_Texture *texture = NULL;
 image *screen = NULL;
 int win_xscale, win_yscale, mouse_xscale, mouse_yscale;
@@ -61,7 +62,7 @@ static int power_of_two(int input)
 //
 void set_mode(int mode, int argc, char **argv)
 {
-    int vidFlags; //= SDL_HWPALETTE;
+    //int vidFlags; //= SDL_HWPALETTE;
 
     /*
     if(flags.fullscreen)
@@ -134,13 +135,25 @@ void set_mode(int mode, int argc, char **argv)
         exit(1);
     }
 
+    // Create our RGBA surface    
+    int bpp;
+    Uint32 rmask, gmask, bmask, amask;
+    SDL_PixelFormatEnumToMasks(SDL_PIXELFORMAT_ARGB8888, &bpp, &rmask, &gmask, &bmask, &amask);
+    
+    rgba_surface = SDL_CreateRGBSurface(0, xres, yres, bpp, rmask, gmask, bmask, amask);
+    if(rgba_surface == NULL)
+    {
+        // Our surface is no good, we have to bail.
+        printf("Video : Unable to create RGBA surface.\n");
+        exit(1);
+    }
     
     //printf("Video : %dx%d %dbpp\n", window->w, window->h, window->format->BitsPerPixel);
 
     // Grab and hide the mouse cursor
     SDL_ShowCursor(0);
     if(flags.grabmouse)
-      SDL_SetWindowGrab(SDL_TRUE);
+	SDL_SetWindowGrab(window, SDL_TRUE);
 
     update_dirty(screen);
 }
@@ -159,7 +172,7 @@ void close_graphics()
         SDL_FreeSurface(surface);
 
     if (texture)
-        SDL_FreeSurface(texture);
+        SDL_DestroyTexture(texture);
 
     delete screen;
 }
@@ -318,8 +331,10 @@ void update_window_done()
 {
     // opengl blit complete surface to window
     
-    // convert color-indexed surface to RGB texture
-    SDL_ConvertPixels(xres, yres, SDL_PIXELFORMAT_INDEX8, surface->pixels, surface->pitch, SDL_PIXELFORMAT_ARGB8888, texture->pixels, texture->pitch);
+    // convert color-indexed surface to RGBA surface
+    SDL_ConvertPixels(xres, yres, SDL_PIXELFORMAT_INDEX8, surface->pixels, surface->pitch, SDL_PIXELFORMAT_ARGB8888, rgba_surface->pixels, rgba_surface->pitch);
+    
+    SDL_UpdateTexture(texture, NULL, rgba_surface->pixels, rgba_surface->pitch);
     
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
