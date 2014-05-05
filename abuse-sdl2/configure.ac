@@ -75,7 +75,7 @@ if test $SDL2_FOUND = "yes"; then
   if test "${ac_cv_my_have_sdl_mixer}" = "no"; then
     AC_MSG_ERROR([*** SDL_mixer not found!])
   fi
-  LIBS="$LIBS -lSDL_mixer"
+  LIBS="$LIBS -lSDL2_mixer"
 else
   ac_cv_my_have_sdl_mixer="no"
   save_CPPFLAGS="${CPPFLAGS}"
