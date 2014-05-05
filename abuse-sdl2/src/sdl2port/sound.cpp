@@ -189,7 +189,13 @@ song::song(char const * filename)
     }
 
     rw = SDL_RWFromMem(data, data_size);
-    music = Mix_LoadMUS_RW(rw);
+    if(!rw)
+    {
+	printf("Sound: ERROR - could not create RWops\n", realname);
+	return;
+    }
+
+    music = Mix_LoadMUS_RW(rw, 0);
 
     if (!music)
     {

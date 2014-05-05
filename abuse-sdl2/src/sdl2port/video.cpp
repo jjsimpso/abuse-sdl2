@@ -127,7 +127,7 @@ void set_mode(int mode, int argc, char **argv)
 				w, h);
 
     // Create our 8-bit surface
-    surface = SDL_CreateRGBSurface(0, xres, yres, 8, 0xff, 0xff, 0xff, 0xff);
+    surface = SDL_CreateRGBSurface(0, xres, yres, 8, 0, 0, 0, 0);
     if(surface == NULL)
     {
         // Our surface is no good, we have to bail.
