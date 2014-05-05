@@ -117,9 +117,11 @@ void set_mode(int mode, int argc, char **argv)
     // texture width/height should be power of 2
     // FIXME: we can use GL_ARB_texture_non_power_of_two or
     // GL_ARB_texture_rectangle to avoid the extra memory allocation
-    w = power_of_two(xres);
-    h = power_of_two(yres);
-    
+    //w = power_of_two(xres);
+    //h = power_of_two(yres);
+    w = xres;
+    h = yres;
+
     // create texture surface
     texture = SDL_CreateTexture(renderer,
 				SDL_PIXELFORMAT_ARGB8888,
@@ -149,6 +151,7 @@ void set_mode(int mode, int argc, char **argv)
     }
     
     //printf("Video : %dx%d %dbpp\n", window->w, window->h, window->format->BitsPerPixel);
+    printf("Video : %dx%d %dbpp\n", xres, yres, bpp);
 
     // Grab and hide the mouse cursor
     SDL_ShowCursor(0);
@@ -168,8 +171,11 @@ void close_graphics()
         delete lastl;
     lastl = NULL;
     // Free our 8-bit surface
-    if(surface)
+    if(surface) 
         SDL_FreeSurface(surface);
+
+    if(rgba_surface) 
+        SDL_FreeSurface(rgba_surface);
 
     if (texture)
         SDL_DestroyTexture(texture);
