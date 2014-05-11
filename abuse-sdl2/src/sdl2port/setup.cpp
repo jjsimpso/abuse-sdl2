@@ -46,6 +46,8 @@ keys_struct keys;
 extern int xres, yres;
 static unsigned int scale;
 
+extern SDL_GameController *controller;
+
 //
 // Display help
 //
@@ -68,6 +70,7 @@ void showHelp()
     printf( "  -fullscreen       Enable fullscreen mode\n" );
     printf( "  -gl               Enable OpenGL\n" );
     printf( "  -antialias        Enable anti-aliasing (with -gl only)\n" );
+    printf( "  -gamepad          Use game controller instead of kbm\n" );
     printf( "  -h, --help        Display this text\n" );
     printf( "  -mono             Disable stereo sound\n" );
     printf( "  -nosound          Disable sound\n" );
@@ -103,6 +106,7 @@ void createRCFile( char *rcfile )
         fputs( "; Grab the mouse to the window\ngrabmouse=0\n\n", fd );
         fputs( "; Set the scale factor\nscale=2\n\n", fd );
         fputs( "; Use anti-aliasing (with gl=1 only)\nantialias=1\n\n", fd );
+        fputs( "; Don't use game controller\ngamepad=0\n\n", fd );
 //        fputs( "; Set the width of the window\nx=320\n\n", fd );
 //        fputs( "; Set the height of the window\ny=200\n\n", fd );
         fputs( "; Disable the SDL parachute in the case of a crash\nnosdlparachute=0\n\n", fd );
@@ -185,6 +189,11 @@ void readRCFile()
                 {
                     flags.antialias = GL_LINEAR;
                 }
+            }
+            else if( strcasecmp( result, "gamepad" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                flags.gamepad = atoi( result );
             }
             else if( strcasecmp( result, "nosdlparachute" ) == 0 )
             {
@@ -313,6 +322,10 @@ void parseCommandLine( int argc, char **argv )
         {
             flags.antialias = GL_LINEAR;
         }
+        else if( !strcasecmp( argv[ii], "-gamepad" ) )
+        {
+            flags.gamepad = 1;
+        }
         else if( !strcasecmp( argv[ii], "-mono" ) )
         {
             flags.mono = 1;
@@ -354,6 +367,7 @@ void setup( int argc, char **argv )
     flags.doublebuf            = 0;            // No double buffering
 #endif
     flags.antialias            = GL_NEAREST;    // Don't anti-alias
+    flags.gamepad              = 0;             // Mouse and keyboard by default
     keys.up                    = key_value( "UP" );
     keys.down                = key_value( "DOWN" );
     keys.left                = key_value( "LEFT" );
@@ -366,7 +380,7 @@ void setup( int argc, char **argv )
     printf( "%s %s\n", PACKAGE_NAME, PACKAGE_VERSION );
 
     // Initialize SDL with video and audio support
-    if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO ) < 0 )
+    if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER ) < 0 )
     {
         printf( "Unable to initialise SDL : %s\n", SDL_GetError() );
         exit( 1 );
@@ -432,6 +446,27 @@ void setup( int argc, char **argv )
     flags.xres = xres * scale;
     flags.yres = yres * scale;
 
+    controller = NULL;
+    // try using the first available game controller
+    if( flags.gamepad )
+    {
+	for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+	    if (SDL_IsGameController(i)) {
+		controller = SDL_GameControllerOpen(i);
+		if (controller) {
+		    printf("Controller: Opened game controller %i: %s\n", i, SDL_GameControllerNameForIndex(i));
+		    break;
+		} else {
+		    printf("Controller: Could not open game controller %i: %s\n", i, SDL_GetError());
+		}
+	    }
+	}
+    }
+    else
+    {
+	printf("Controller: Using keyboard and mouse\n");
+    }
+    
     // Stop SDL handling some errors
     if( flags.nosdlparachute )
     {
