@@ -24,6 +24,7 @@ struct flags_struct
     short overlay;
     short gl;
     int antialias;
+    int gamepad;
 };
 
 struct keys_struct
