@@ -462,7 +462,8 @@ void setup( int argc, char **argv )
 	    }
 	}
     }
-    else
+
+    if(controller == NULL)
     {
 	printf("Controller: Using keyboard and mouse\n");
     }
