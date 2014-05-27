@@ -516,28 +516,40 @@ void controller_to_mouse( event &ev )
     
     lr_axis /= 1024;
     ud_axis /= -1024; // flip this axis
-    
+
     // convert to mouse position
     float theta = 0.0;
     float cos_theta;
     float mag = sqrtf((lr_axis * lr_axis) + (ud_axis * ud_axis));
     float udotv = 1.0 * lr_axis;
 
+    // give a little dead zone
     if(mag > 0.001)
     {
+	int radius;
+	
+	// calculate the aim angle in terms of a unit circle
 	cos_theta = udotv / mag;
 	theta = acosf(cos_theta);
 
 	if(ud_axis < 0) theta *= -1.0f;
 
 	// calculate the origin
-	int w = screen->Size().x / 2;
-	int h = screen->Size().y / 2;
-	int radius = 200;
-	
-	x = w;
-	y = h;
-	
+	if(the_game->first_view)
+	{
+	    x = the_game->first_view->focus->x - the_game->first_view->xoff();
+	    y = the_game->first_view->focus->y - the_game->first_view->yoff();
+
+	    y -= 20;
+	    radius = 50;
+	}
+	else
+	{
+	    x = screen->Size().x / 2;
+	    y = screen->Size().y / 2;
+	    radius = 200;
+	}
+
 	x += (int)roundf(cosf(theta) * radius);
 	y += (int)roundf(sinf(theta) * -1.0 * radius);
 
