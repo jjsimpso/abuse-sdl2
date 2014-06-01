@@ -159,11 +159,11 @@ void event_handler::get_event( event &ev )
     }
     else
     {
-        // NOTE : that the mouse status should be known
-        // even if another event has occurred.
-        ev.mouse_move.x = mouse->x();
-        ev.mouse_move.y = mouse->y();
-        ev.mouse_button = mouse->button();
+	// NOTE : that the mouse status should be known
+	// even if another event has occurred.
+	ev.mouse_move.x = mouse->x();
+	ev.mouse_move.y = mouse->y();
+	ev.mouse_button = mouse->button();
 
         // Gather events
         SDL_Event event;
@@ -173,12 +173,13 @@ void event_handler::get_event( event &ev )
 	    {
 		// controller axis events translated to mouse events
 		controller_to_mouse(ev);
-
+#if 0
 		if(ev.type != EV_MOUSE_MOVE)
 		{
 		    //handle mouse events if controller not active
 		    handle_mouse( ev );
 		}
+#endif
 	    }
 	    else
 	    {
@@ -260,8 +261,12 @@ void event_handler::get_event( event &ev )
 		    switch (event.cbutton.button) 
 		    {
 			case SDL_CONTROLLER_BUTTON_A:
+			    ev.key = JK_INSERT;
 			    break;
 			case SDL_CONTROLLER_BUTTON_Y:
+			    break;
+			case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+			    ev.key = JK_UP;
 			    break;
 			case SDL_CONTROLLER_BUTTON_START:
 			    break;
