@@ -54,6 +54,7 @@ class event_handler
   int mhere,ewaiting,last_keystat,last_key;
   int get_key_flags();
   linked_list events;
+  bool controller_enabled;
 public :
   JCMouse *mouse;
   sprite *mouse_sprite() { return mouse->mouse_sprite(); }
@@ -73,6 +74,14 @@ public :
   void set_mouse_shape(image *im, int centerx, int centery) { mouse->set_shape(im,-centerx,-centery); }
   void set_mouse_position(int mx, int my) { if (mouse) mouse->set_position(mx,my); }
   ~event_handler();
+
+  // To enable/disable game controller
+  // enables switching between mouse and gamepad when entering certain screens
+  // Added for SDL2 game controller support
+  void enable_controller(bool enabled)
+  {
+      controller_enabled = enabled;
+  }
 } ;
 #endif
 
