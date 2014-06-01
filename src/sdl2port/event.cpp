@@ -57,6 +57,10 @@ event_handler::event_handler( image *screen, palette *pal )
     last_keystat = get_key_flags();
     ewaiting = 0;
 
+    // enable game controller
+    // still needs to be detected to be used though
+    controller_enabled = true;
+    
     // Ignore activate events (still needed in SDL2?)
     //SDL_EventState( SDL_ACTIVEEVENT, SDL_IGNORE );
 }
@@ -165,7 +169,7 @@ void event_handler::get_event( event &ev )
         SDL_Event event;
         if( SDL_PollEvent( &event ) )
         {
-	    if((controller != NULL) && (the_game->state == RUN_STATE))
+	    if((controller != NULL) && (the_game->state == RUN_STATE) && controller_enabled)
 	    {
 		// controller axis events translated to mouse events
 		controller_to_mouse(ev);
