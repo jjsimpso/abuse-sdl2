@@ -44,7 +44,7 @@ extern SDL_Window *window;
 
 // Pre-declarations
 void handle_mouse( event &ev );
-void controller_to_mouse( event &ev );
+void controller_to_mouse( event &ev, SDL_Event *sdl_event );
 
 //
 // Constructor
@@ -163,7 +163,7 @@ void event_handler::get_event( event &ev )
 	// even if another event has occurred.
 	ev.mouse_move.x = mouse->x();
 	ev.mouse_move.y = mouse->y();
-	ev.mouse_button = mouse->button();
+	//ev.mouse_button = mouse->button();
 
         // Gather events
         SDL_Event event;
@@ -172,7 +172,8 @@ void event_handler::get_event( event &ev )
 	    if((controller != NULL) && (the_game->state == RUN_STATE) && controller_enabled)
 	    {
 		// controller axis events translated to mouse events
-		controller_to_mouse(ev);
+		controller_to_mouse(ev, &event);
+		printf("ev.mouse button = %d, mouse_buttons[0]=%d\n", ev.mouse_button, mouse_buttons[0]);
 #if 0
 		if(ev.type != EV_MOUSE_MOVE)
 		{
@@ -183,6 +184,7 @@ void event_handler::get_event( event &ev )
 	    }
 	    else
 	    {
+		ev.mouse_button = mouse->button();
 		handle_mouse( ev );
 	    }
 
@@ -244,6 +246,12 @@ void event_handler::get_event( event &ev )
 		case SDL_CONTROLLERBUTTONDOWN:
 		case SDL_CONTROLLERBUTTONUP:
 		{
+		    if((event.cbutton.button == SDL_CONTROLLER_BUTTON_RIGHTSHOULDER) ||
+		       (event.cbutton.button == SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
+		    {
+			// already handled these in controller_to_mouse()
+			break;
+		    }
 		    printf("Got controller button press\n");
 		    
                     if( event.type == SDL_CONTROLLERBUTTONDOWN )
@@ -264,9 +272,6 @@ void event_handler::get_event( event &ev )
 			    ev.key = JK_INSERT;
 			    break;
 			case SDL_CONTROLLER_BUTTON_Y:
-			    break;
-			case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
-			    ev.key = JK_UP;
 			    break;
 			case SDL_CONTROLLER_BUTTON_START:
 			    break;
@@ -484,7 +489,7 @@ void handle_mouse( event &ev )
         ev.mouse_button &= ( 0xff - LEFT_BUTTON );
     }
 
-    // Middle button
+   // Middle button
     if( (buttons & SDL_BUTTON(2)) && !mouse_buttons[2] )
     {
         ev.type = EV_MOUSE_BUTTON;
@@ -515,7 +520,7 @@ void handle_mouse( event &ev )
     }
 }
 
-void controller_to_mouse( event &ev )
+void controller_to_mouse( event &ev, SDL_Event *sdl_event )
 {
     Sint16 lr_axis, ud_axis;
     int x, y;
@@ -579,5 +584,48 @@ void controller_to_mouse( event &ev )
     }
     
     // clear the mouse button events
-    ev.mouse_button = 0;
+    
+
+    // keep the state between calls
+    static int mouse_button_state = 0;
+
+    // restore previous state
+    ev.mouse_button = mouse_button_state;
+
+    if((sdl_event->type == SDL_CONTROLLERBUTTONDOWN) ||
+       (sdl_event->type == SDL_CONTROLLERBUTTONUP))       
+    {
+	switch (sdl_event->cbutton.button)
+	{
+	    case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+		// Left button
+		ev.type = EV_MOUSE_BUTTON;
+		if(sdl_event->type == SDL_CONTROLLERBUTTONDOWN)
+		{
+		    ev.mouse_button |= LEFT_BUTTON;
+		}
+		else
+		{
+		    ev.mouse_button &= ( 0xff - LEFT_BUTTON );
+		}
+		break;
+	    case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+		// Right button
+		ev.type = EV_MOUSE_BUTTON;
+		if(sdl_event->type == SDL_CONTROLLERBUTTONDOWN)
+		{
+		    ev.mouse_button |= RIGHT_BUTTON;
+		}
+		else
+		{
+		    ev.mouse_button &= ( 0xff - RIGHT_BUTTON );
+		}
+		break;
+	    default:
+		break;
+	}
+    }
+    
+    // save the current state
+    mouse_button_state = ev.mouse_button;
 }
