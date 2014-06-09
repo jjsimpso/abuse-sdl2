@@ -92,6 +92,9 @@ void set_mode(int mode, int argc, char **argv)
         exit(1);
     }
 
+    // This will make sure that the aspect ratio is maintained in fullscreen mode
+    SDL_RenderSetLogicalSize(renderer, flags.xres, flags.yres);
+
     // Create the screen image
     screen = new image(vec2i(xres, yres), NULL, 2);
     if(screen == NULL)
