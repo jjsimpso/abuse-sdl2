@@ -62,16 +62,6 @@ static int power_of_two(int input)
 //
 void set_mode(int mode, int argc, char **argv)
 {
-    //int vidFlags; //= SDL_HWPALETTE;
-
-    /*
-    if(flags.fullscreen)
-        vidFlags |= SDL_FULLSCREEN;
-
-    if(flags.doublebuf)
-        vidFlags |= SDL_DOUBLEBUF;
-    */
-    
     // Calculate the window scale
     win_xscale = mouse_xscale = (flags.xres << 16) / xres;
     win_yscale = mouse_yscale = (flags.yres << 16) / yres;
@@ -86,7 +76,7 @@ void set_mode(int mode, int argc, char **argv)
 			      SDL_WINDOWPOS_UNDEFINED,
 			      SDL_WINDOWPOS_UNDEFINED,
 			      flags.xres, flags.yres,
-			      0);
+			      (flags.fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
 
     if(window == NULL)
     {
