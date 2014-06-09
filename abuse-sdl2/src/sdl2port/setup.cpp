@@ -66,11 +66,9 @@ void showHelp()
     printf( "\n" );
     printf( "** Abuse-SDL Options **\n" );
     printf( "  -datadir <arg>    Set the location of the game data to <arg>\n" );
-    printf( "  -doublebuf        Enable double buffering\n" );
     printf( "  -fullscreen       Enable fullscreen mode\n" );
-    printf( "  -gl               Enable OpenGL\n" );
-    printf( "  -antialias        Enable anti-aliasing (with -gl only)\n" );
     printf( "  -gamepad          Use game controller instead of kbm\n" );
+    printf( "  -grabmouse        Grab the mouse to the window\n" );
     printf( "  -h, --help        Display this text\n" );
     printf( "  -mono             Disable stereo sound\n" );
     printf( "  -nosound          Disable sound\n" );
@@ -93,19 +91,13 @@ void createRCFile( char *rcfile )
     {
         fputs( "; Abuse-SDL Configuration file\n\n", fd );
         fputs( "; Startup fullscreen\nfullscreen=0\n\n", fd );
-        #ifdef __APPLE__
-        fputs( "; Use DoubleBuffering\ndoublebuf=1\n\n", fd );
-        fputs( "; Use OpenGL\ngl=1\n\n", fd );
-        #else
-        fputs( "; Use DoubleBuffering\ndoublebuf=0\n\n", fd );
-        fputs( "; Use OpenGL\ngl=0\n\n", fd );
+        #ifndef __APPLE__
         fputs( "; Location of the datafiles\ndatadir=", fd );
         fputs( ASSETDIR "\n\n", fd );
         #endif
         fputs( "; Use mono audio only\nmono=0\n\n", fd );
         fputs( "; Grab the mouse to the window\ngrabmouse=0\n\n", fd );
         fputs( "; Set the scale factor\nscale=2\n\n", fd );
-        fputs( "; Use anti-aliasing (with gl=1 only)\nantialias=1\n\n", fd );
         fputs( "; Don't use game controller\ngamepad=0\n\n", fd );
 //        fputs( "; Set the width of the window\nx=320\n\n", fd );
 //        fputs( "; Set the height of the window\ny=200\n\n", fd );
@@ -143,11 +135,6 @@ void readRCFile()
                 result = strtok( NULL, "\n" );
                 flags.fullscreen = atoi( result );
             }
-            else if( strcasecmp( result, "doublebuf" ) == 0 )
-            {
-                result = strtok( NULL, "\n" );
-                flags.doublebuf = atoi( result );
-            }
             else if( strcasecmp( result, "mono" ) == 0 )
             {
                 result = strtok( NULL, "\n" );
@@ -175,21 +162,6 @@ void readRCFile()
                 result = strtok( NULL, "\n" );
                 flags.yres = atoi( result );
             }*/
-            else if( strcasecmp( result, "gl" ) == 0 )
-            {
-                // We leave this in even if we don't have OpenGL so we can
-                // at least inform the user.
-                result = strtok( NULL, "\n" );
-                flags.gl = atoi( result );
-            }
-            else if( strcasecmp( result, "antialias" ) == 0 )
-            {
-                result = strtok( NULL, "\n" );
-                if( atoi( result ) )
-                {
-                    flags.antialias = GL_LINEAR;
-                }
-            }
             else if( strcasecmp( result, "gamepad" ) == 0 )
             {
                 result = strtok( NULL, "\n" );
@@ -267,10 +239,6 @@ void parseCommandLine( int argc, char **argv )
         {
             flags.fullscreen = 1;
         }
-        else if( !strcasecmp( argv[ii], "-doublebuf" ) )
-        {
-            flags.doublebuf = 1;
-        }
         else if( !strcasecmp( argv[ii], "-size" ) )
         {
             if( ii + 1 < argc && !sscanf( argv[++ii], "%d", &xres ) )
@@ -312,19 +280,13 @@ void parseCommandLine( int argc, char **argv )
         {
             flags.nosound = 1;
         }
-        else if( !strcasecmp( argv[ii], "-gl" ) )
-        {
-            // We leave this in even if we don't have OpenGL so we can
-            // at least inform the user.
-            flags.gl = 1;
-        }
-        else if( !strcasecmp( argv[ii], "-antialias" ) )
-        {
-            flags.antialias = GL_LINEAR;
-        }
         else if( !strcasecmp( argv[ii], "-gamepad" ) )
         {
             flags.gamepad = 1;
+        }
+        else if( !strcasecmp( argv[ii], "-grabmouse" ) )
+        {
+            flags.grabmouse = 1;
         }
         else if( !strcasecmp( argv[ii], "-mono" ) )
         {
@@ -359,14 +321,6 @@ void setup( int argc, char **argv )
     flags.nosdlparachute    = 0;            // SDL error handling
     flags.xres = xres        = 320;            // Default window width
     flags.yres = yres        = 200;            // Default window height
-#ifdef __APPLE__
-    flags.gl                = 1;            // Use opengl
-    flags.doublebuf            = 1;            // Do double buffering
-#else
-    flags.gl                = 0;            // Don't use opengl
-    flags.doublebuf            = 0;            // No double buffering
-#endif
-    flags.antialias            = GL_NEAREST;    // Don't anti-alias
     flags.gamepad              = 0;             // Mouse and keyboard by default
     keys.up                    = key_value( "UP" );
     keys.down                = key_value( "DOWN" );
