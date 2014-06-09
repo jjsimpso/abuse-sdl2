@@ -34,6 +34,7 @@
 #include "timing.h"
 #include "sprite.h"
 #include "game.h"
+#include "setup.h"
 
 extern int get_key_binding( char const *dir, int i );
 extern int mouse_xscale, mouse_yscale;
@@ -41,6 +42,7 @@ short mouse_buttons[5] = { 0, 0, 0, 0, 0 };
 SDL_GameController *controller;
 
 extern SDL_Window *window;
+extern flags_struct flags;
 
 // Pre-declarations
 void handle_mouse( event &ev );
@@ -361,8 +363,17 @@ void event_handler::get_event( event &ev )
                             if( ev.type == EV_KEY )
                             {
                                 // Toggle fullscreen
-				// need to figure this out for SDL2
-                                //SDL_WM_ToggleFullScreen( SDL_GetVideoSurface() );
+				if(flags.fullscreen)
+				{
+				    flags.fullscreen = 0;
+				    SDL_SetWindowFullscreen(window, 0);
+				    SDL_SetWindowSize(window, flags.xres, flags.yres);
+				}
+				else
+				{
+				    flags.fullscreen = 1;
+				    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+				}
                             }
                             ev.key = EV_SPURIOUS;
                             break;
