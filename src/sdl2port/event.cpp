@@ -269,22 +269,33 @@ void event_handler::get_event( event &ev )
 		    switch (event.cbutton.button) 
 		    {
 			case SDL_CONTROLLER_BUTTON_A:
+			    // change weapons
 			    ev.key = JK_INSERT;
 			    break;
+			case SDL_CONTROLLER_BUTTON_X:
+			    // jump
+			    ev.key = JK_UP;
+			    break;
 			case SDL_CONTROLLER_BUTTON_Y:
+			    // activate switch
+			    ev.key = JK_DOWN;
 			    break;
 			case SDL_CONTROLLER_BUTTON_START:
 			    break;
 			case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+			    // move left
 			    ev.key = JK_LEFT;
 			    break;
 			case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+			    // move right
 			    ev.key = JK_RIGHT;
 			    break;
 			case SDL_CONTROLLER_BUTTON_DPAD_UP:
+			    // jump
 			    ev.key = JK_UP;
 			    break;
 			case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+			    // activate switch
 			    ev.key = JK_DOWN;
 			    break;
 			default:
@@ -583,9 +594,6 @@ void controller_to_mouse( event &ev, SDL_Event *sdl_event )
 	//printf("right analog stick (%d,%d) theta = %2f\n", lr_axis, ud_axis, theta);
     }
     
-    // clear the mouse button events
-    
-
     // keep the state between calls
     static int mouse_button_state = 0;
 
