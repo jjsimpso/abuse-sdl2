@@ -577,7 +577,7 @@ void controller_to_mouse( event &ev, SDL_Event *sdl_event )
 	    y = the_game->first_view->focus->y - the_game->first_view->yoff();
 
 	    y -= 20;
-	    radius = 50;
+	    radius = 75;
 	}
 	else
 	{
