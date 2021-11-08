@@ -90,9 +90,9 @@ fi
 
 if test "${enable_debug}" = "yes"; then
   AC_DEFINE(HAVE_DEBUG, 1, Define to 1 to activate debug)
-  OPT="-O0"
+  OPT="-O0 -fno-delete-null-pointer-checks"
 else
-  OPT="-O2 -fno-strength-reduce -fomit-frame-pointer"
+  OPT="-O2 -fno-delete-null-pointer-checks -fno-strength-reduce -fomit-frame-pointer"
 fi
 
 if test "${enable_release}" = "yes"; then
