@@ -12,7 +12,7 @@
 #define __LOADER_HPP_
 
 #include "lisp/lisp.h"
-#include "sdlport/sound.h"
+#include "sound.h"
 
 #include "jwindow.h"
 class property_manager;

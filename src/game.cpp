@@ -23,7 +23,7 @@
 
 #include "common.h"
 
-#include "sdlport/joy.h"
+#include "joy.h"
 
 #include "dev.h"
 #include "game.h"

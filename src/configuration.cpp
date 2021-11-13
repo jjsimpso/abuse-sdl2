@@ -16,7 +16,7 @@
 
 #include "common.h"
 
-#include "sdlport/joy.h"
+#include "joy.h"
 #include "game.h"
 
 #include "keys.h"
