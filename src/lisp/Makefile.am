@@ -9,6 +9,6 @@ liblisp_a_SOURCES = \
     stack.h symbols.h \
     $(NULL)
 
-INCLUDES = -I$(srcdir) -I$(srcdir)/../ -I$(srcdir)/../imlib $(SDL_CFLAGS)
+INCLUDES = -I$(srcdir) -I$(srcdir)/../ -I$(srcdir)/../@SDLPORT_DIR@ -I$(srcdir)/../imlib $(SDL_CFLAGS)
 
 CPPFLAGS = @CPPFLAGS@ -DNO_CHECK

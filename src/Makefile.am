@@ -74,7 +74,7 @@ abuse_tool_SOURCES = \
 abuse_tool_LDADD = imlib/libimlib.a
 abuse_tool_DEPENDENCIES = $(abuse_tool_LDADD)
 
-INCLUDES = -I$(srcdir) -I $(srcdir)/lisp -I$(srcdir)/imlib \
+INCLUDES = -I$(srcdir) -I $(srcdir)/lisp -I$(srcdir)/@SDLPORT_DIR@ -I$(srcdir)/imlib \
            -I$(srcdir)/net $(SDL_CFLAGS)
 
 CPPFLAGS = @CPPFLAGS@ -DNO_CHECK
